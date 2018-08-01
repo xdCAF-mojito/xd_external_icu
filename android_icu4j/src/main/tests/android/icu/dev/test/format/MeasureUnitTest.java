@@ -17,8 +17,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.text.FieldPosition;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ import android.icu.text.MeasureFormat;
 import android.icu.text.MeasureFormat.FormatWidth;
 import android.icu.text.NumberFormat;
 import android.icu.util.Currency;
+import android.icu.util.CurrencyAmount;
 import android.icu.util.Measure;
 import android.icu.util.MeasureUnit;
 import android.icu.util.NoUnit;
@@ -83,7 +86,7 @@ public class MeasureUnitTest extends TestFmwk {
         }
     }
 
-    private static final String[] DRAFT_VERSIONS = {"57", "58", "59"};
+    private static final String[] DRAFT_VERSIONS = {"60", "61", "62"};
 
     private static final HashSet<String> DRAFT_VERSION_SET = new HashSet<String>();
 
@@ -224,10 +227,6 @@ public class MeasureUnitTest extends TestFmwk {
         {"PART_PER_MILLION", "57"},
         {"MILE_PER_GALLON_IMPERIAL", "57"},
         {"GALLON_IMPERIAL", "57"},
-        // {"EAST", "58"},
-        // {"NORTH", "58"},
-        // {"SOUTH", "58"},
-        // {"WEST", "58"},
         {"POINT", "59"},
     };
 
@@ -254,12 +253,12 @@ public class MeasureUnitTest extends TestFmwk {
         // various generateXXX calls go here, see
         // http://site.icu-project.org/design/formatting/measureformat/updating-measure-unit
         // use this test to run each of the ollowing in succession
-        //generateConstants("59"); // for MeasureUnit.java, update generated MeasureUnit constants
-        //generateBackwardCompatibilityTest("59"); // for MeasureUnitTest.java, create TestCompatible59
-        //generateCXXHConstants("59"); // for measunit.h, update generated createXXX methods
+        //generateConstants("62"); // for MeasureUnit.java, update generated MeasureUnit constants
+        //generateBackwardCompatibilityTest("62"); // for MeasureUnitTest.java, create TestCompatible62
+        //generateCXXHConstants("62"); // for measunit.h, update generated createXXX methods
         //generateCXXConstants(); // for measunit.cpp, update generated code
-        //generateCXXBackwardCompatibilityTest("59"); // for measfmttest.cpp, create TestCompatible59
-        //updateJAVAVersions("59"); // for MeasureUnitTest.java, JAVA_VERSIONS
+        //generateCXXBackwardCompatibilityTest("62"); // for measfmttest.cpp, create TestCompatible62
+        //updateJAVAVersions("62"); // for MeasureUnitTest.java, JAVA_VERSIONS
     }
 
     @Test
@@ -1136,6 +1135,9 @@ public class MeasureUnitTest extends TestFmwk {
         assertEquals("",  135, units.length);
     }
 
+    // Note that TestCompatible60(), TestCompatible61(), TestCompatible62()
+    // would be the same as TestCompatible59(), no need to add them.
+
     @Test
     public void TestExamplesInDocs() {
         MeasureFormat fmtFr = MeasureFormat.getInstance(
@@ -1461,6 +1463,15 @@ public class MeasureUnitTest extends TestFmwk {
             MeasureUnit actual = MeasureUnit.internalGetInstance(type, code);
             assertSame("Identity check", expected, actual);
         }
+
+        // The return value should contain only unique elements
+        assertUnique(MeasureUnit.getAvailable());
+    }
+
+    static void assertUnique(Collection<?> coll) {
+        int expectedSize = new HashSet<Object>(coll).size();
+        int actualSize = coll.size();
+        assertEquals("Collection should contain only unique elements", expectedSize, actualSize);
     }
 
     @Test
@@ -1491,7 +1502,7 @@ public class MeasureUnitTest extends TestFmwk {
                 {ULocale.ENGLISH, FormatWidth.SHORT, "2 mi, 1 ft, 2.3 in"},
                 {ULocale.ENGLISH, FormatWidth.NARROW, "2mi 1\u2032 2.3\u2033"},
                 {russia, FormatWidth.WIDE,   "2 \u043C\u0438\u043B\u0438 1 \u0444\u0443\u0442 2,3 \u0434\u044E\u0439\u043C\u0430"},
-                {russia, FormatWidth.SHORT,  "2 \u043C\u0438\u043B\u0438 1 \u0444\u0443\u0442 2,3 \u0434\u044E\u0439\u043C."},
+                {russia, FormatWidth.SHORT,  "2 \u043C\u0438\u043B\u0438 1 \u0444\u0442 2,3 \u0434\u044E\u0439\u043C."},
                 {russia, FormatWidth.NARROW, "2 \u043C\u0438\u043B\u044C 1 \u0444\u0442 2,3 \u0434\u044E\u0439\u043C\u0430"},
    };
         for (Object[] row : data) {
@@ -1679,9 +1690,11 @@ public class MeasureUnitTest extends TestFmwk {
         assertEquals("numeric currency", "$2.00", mf.format(USD_2));
 
         mf = MeasureFormat.getInstance(ULocale.JAPAN, FormatWidth.WIDE);
-        assertEquals("Wide currency", "-1.00 \u7C73\u30C9\u30EB", mf.format(USD_NEG_1));
-        assertEquals("Wide currency", "1.00 \u7C73\u30C9\u30EB", mf.format(USD_1));
-        assertEquals("Wide currency", "2.00 \u7C73\u30C9\u30EB", mf.format(USD_2));
+        // Locale jp does NOT put a space between the number and the currency long name:
+        // https://unicode.org/cldr/trac/browser/tags/release-32-0-1/common/main/ja.xml?rev=13805#L7046
+        assertEquals("Wide currency", "-1.00\u7C73\u30C9\u30EB", mf.format(USD_NEG_1));
+        assertEquals("Wide currency", "1.00\u7C73\u30C9\u30EB", mf.format(USD_1));
+        assertEquals("Wide currency", "2.00\u7C73\u30C9\u30EB", mf.format(USD_2));
 
         Measure CAD_1 = new Measure(1.0, Currency.getInstance("CAD"));
         mf = MeasureFormat.getInstance(ULocale.CANADA, FormatWidth.SHORT);
@@ -1915,7 +1928,7 @@ public class MeasureUnitTest extends TestFmwk {
                         new Measure(5.3, MeasureUnit.INCH)));
         assertEquals("getLocale", ULocale.ENGLISH, mf.getLocale());
         assertEquals("getNumberFormat", ULocale.ENGLISH, mf.getNumberFormat().getLocale(ULocale.VALID_LOCALE));
-        assertEquals("getWidth", MeasureFormat.FormatWidth.WIDE, mf.getWidth());
+        assertEquals("getWidth", MeasureFormat.FormatWidth.DEFAULT_CURRENCY, mf.getWidth());
     }
 
     @Test
@@ -1924,6 +1937,15 @@ public class MeasureUnitTest extends TestFmwk {
         MeasureFormat mfj = MeasureFormat.getCurrencyFormat(Locale.FRANCE);
 
         assertEquals("getCurrencyFormat ULocale/Locale", mfu, mfj);
+    }
+
+    @Test
+    public void testCurrencyFormatParseIsoCode() throws ParseException {
+        MeasureFormat mf = MeasureFormat.getCurrencyFormat(ULocale.ENGLISH);
+        CurrencyAmount result = (CurrencyAmount) mf.parseObject("GTQ 34.56");
+        assertEquals("Parse should succeed", result.getNumber().doubleValue(), 34.56, 0.0);
+        assertEquals("Should parse ISO code GTQ even though the currency is USD",
+                "GTQ", result.getCurrency().getCurrencyCode());
     }
 
     @Test
@@ -2154,7 +2176,10 @@ public class MeasureUnitTest extends TestFmwk {
         TreeMap<String, List<MeasureUnit>> allUnits = getAllUnits();
 
         // Hack: for C++, add NoUnits here, but ignore them when printing the create methods.
+        // ALso keep track of the base unit offset to make the C++ default constructor faster.
         allUnits.put("none", Arrays.asList(new MeasureUnit[]{NoUnit.BASE, NoUnit.PERCENT, NoUnit.PERMILLE}));
+        int baseTypeIdx = -1;
+        int baseSubTypeIdx = -1;
 
         System.out.println("static const int32_t gOffsets[] = {");
         int index = 0;
@@ -2207,6 +2232,10 @@ public class MeasureUnitTest extends TestFmwk {
                 first = false;
                 measureUnitToOffset.put(unit, offset);
                 measureUnitToTypeSubType.put(unit, Pair.of(typeIdx, subTypeIdx));
+                if (unit == NoUnit.BASE) {
+                    baseTypeIdx = typeIdx;
+                    baseSubTypeIdx = subTypeIdx;
+                }
                 offset++;
                 subTypeIdx++;
             }
@@ -2249,6 +2278,12 @@ public class MeasureUnitTest extends TestFmwk {
         }
         System.out.println();
         System.out.println("};");
+        System.out.println();
+
+        // Print out the fast-path for the default constructor
+        System.out.println("// Shortcuts to the base unit in order to make the default constructor fast");
+        System.out.println("static const int32_t kBaseTypeIdx = " + baseTypeIdx + ";");
+        System.out.println("static const int32_t kBaseSubTypeIdx = " + baseSubTypeIdx + ";");
         System.out.println();
 
         Map<String, MeasureUnit> seen = new HashMap<String, MeasureUnit>();

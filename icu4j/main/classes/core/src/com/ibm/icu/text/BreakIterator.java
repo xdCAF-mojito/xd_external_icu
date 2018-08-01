@@ -81,10 +81,7 @@ import com.ibm.icu.util.ULocale;
  *
  * BreakIterator accesses the text it analyzes through a CharacterIterator, which makes
  * it possible to use BreakIterator to analyze text in any text-storage vehicle that
- * provides a CharacterIterator interface. When BreakIterator.setText(CharacterIterator) or
- * getText() was called, the CharacterIterator must not be modified, or else the BreakIterator
- * behavior is undefined. In particular, call BreakIterator.setText(),
- * not CharacterIterator.setText().
+ * provides a CharacterIterator interface.
  *
  * <b>Note:</b>  Some types of BreakIterator can take a long time to create, and
  * instances of BreakIterator are not currently cached by the system.  For
@@ -448,14 +445,13 @@ public abstract class BreakIterator implements Cloneable
 
     /**
      * For RuleBasedBreakIterators, return the status tag from the
-     * break rule that determined the most recently
-     * returned break position.
+     * break rule that determined the boundary at the current iteration position.
      * <p>
      * For break iterator types that do not support a rule status,
      * a default value of 0 is returned.
      * <p>
-     * @return The status from the break rule that determined the most recently
-     *         returned break position.
+     * @return The status from the break rule that determined the boundary
+     * at the current iteration position.
      *
      * @stable ICU 52
      */
@@ -466,7 +462,7 @@ public abstract class BreakIterator implements Cloneable
 
     /**
      * For RuleBasedBreakIterators, get the status (tag) values from the break rule(s)
-     * that determined the most recently returned break position.
+     * that determined the the boundary at the current iteration position.
      * <p>
      * For break iterator types that do not support rule status,
      * no values are returned.
@@ -477,7 +473,7 @@ public abstract class BreakIterator implements Cloneable
      *
      * @param fillInArray an array to be filled in with the status values.
      * @return          The number of rule status values from rules that determined
-     *                  the most recent boundary returned by the break iterator.
+     *                  the the boundary at the current iteration position.
      *                  In the event that the array is too small, the return value
      *                  is the total number of status values that were available,
      *                  not the reduced number that were actually returned.
@@ -886,10 +882,6 @@ s     */
 
         BreakIteratorCache cache = new BreakIteratorCache(where, result);
         iterCache[kind] = CacheValue.getInstance(cache);
-        if (result instanceof RuleBasedBreakIterator) {
-            RuleBasedBreakIterator rbbi = (RuleBasedBreakIterator)result;
-            rbbi.setBreakType(kind);
-        }
 
         return result;
     }

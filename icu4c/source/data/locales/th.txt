@@ -181,7 +181,7 @@ th{
         minimumGroupingDigits{"1"}
         native{"thai"}
     }
-    Version{"2.1.37.56"}
+    Version{"2.1.41.97"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -901,7 +901,6 @@ th{
                 }
             }
         }
-        default{"gregorian"} // android-changed
         ethiopic{
             monthNames{
                 format{

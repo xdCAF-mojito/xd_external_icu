@@ -132,7 +132,7 @@ import android.icu.util.VersionInfo;
  * Comparison:<ul>
  * <li> isUWhiteSpace=UCHAR_WHITE_SPACE: Unicode White_Space property;
  *       most of general categories "Z" (separators) + most whitespace ISO controls
- *       (including no-break spaces, but excluding IS1..IS4 and ZWSP)
+ *       (including no-break spaces, but excluding IS1..IS4)
  * <li> isWhitespace: Java isWhitespace; Z + whitespace ISO controls but excluding no-break spaces
  * <li> isSpaceChar: just Z (including no-break spaces)</ul>
  *
@@ -986,6 +986,31 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         /***/
         public static final int ZANABAZAR_SQUARE_ID = 280; /*[11A00]*/
 
+        // New blocks in Unicode 11.0
+
+        /** @hide unsupported on Android*/
+        public static final int CHESS_SYMBOLS_ID = 281; /*[1FA00]*/
+        /** @hide unsupported on Android*/
+        public static final int DOGRA_ID = 282; /*[11800]*/
+        /** @hide unsupported on Android*/
+        public static final int GEORGIAN_EXTENDED_ID = 283; /*[1C90]*/
+        /** @hide unsupported on Android*/
+        public static final int GUNJALA_GONDI_ID = 284; /*[11D60]*/
+        /** @hide unsupported on Android*/
+        public static final int HANIFI_ROHINGYA_ID = 285; /*[10D00]*/
+        /** @hide unsupported on Android*/
+        public static final int INDIC_SIYAQ_NUMBERS_ID = 286; /*[1EC70]*/
+        /** @hide unsupported on Android*/
+        public static final int MAKASAR_ID = 287; /*[11EE0]*/
+        /** @hide unsupported on Android*/
+        public static final int MAYAN_NUMERALS_ID = 288; /*[1D2E0]*/
+        /** @hide unsupported on Android*/
+        public static final int MEDEFAIDRIN_ID = 289; /*[16E40]*/
+        /** @hide unsupported on Android*/
+        public static final int OLD_SOGDIAN_ID = 290; /*[10F00]*/
+        /** @hide unsupported on Android*/
+        public static final int SOGDIAN_ID = 291; /*[10F30]*/
+
         /**
          * One more than the highest normal UnicodeBlock value.
          * The highest value is available via UCharacter.getIntPropertyMaxValue(UProperty.BLOCK).
@@ -994,7 +1019,7 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
          * @hide unsupported on Android
          */
         @Deprecated
-        public static final int COUNT = 281;
+        public static final int COUNT = 292;
 
         // blocks objects ---------------------------------------------------
 
@@ -2100,6 +2125,39 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         public static final UnicodeBlock ZANABAZAR_SQUARE =
                 new UnicodeBlock("ZANABAZAR_SQUARE", ZANABAZAR_SQUARE_ID); /*[11A00]*/
 
+        // New blocks in Unicode 11.0
+
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock CHESS_SYMBOLS =
+                new UnicodeBlock("CHESS_SYMBOLS", CHESS_SYMBOLS_ID); /*[1FA00]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock DOGRA = new UnicodeBlock("DOGRA", DOGRA_ID); /*[11800]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock GEORGIAN_EXTENDED =
+                new UnicodeBlock("GEORGIAN_EXTENDED", GEORGIAN_EXTENDED_ID); /*[1C90]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock GUNJALA_GONDI =
+                new UnicodeBlock("GUNJALA_GONDI", GUNJALA_GONDI_ID); /*[11D60]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock HANIFI_ROHINGYA =
+                new UnicodeBlock("HANIFI_ROHINGYA", HANIFI_ROHINGYA_ID); /*[10D00]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock INDIC_SIYAQ_NUMBERS =
+                new UnicodeBlock("INDIC_SIYAQ_NUMBERS", INDIC_SIYAQ_NUMBERS_ID); /*[1EC70]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock MAKASAR = new UnicodeBlock("MAKASAR", MAKASAR_ID); /*[11EE0]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock MAYAN_NUMERALS =
+                new UnicodeBlock("MAYAN_NUMERALS", MAYAN_NUMERALS_ID); /*[1D2E0]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock MEDEFAIDRIN =
+                new UnicodeBlock("MEDEFAIDRIN", MEDEFAIDRIN_ID); /*[16E40]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock OLD_SOGDIAN =
+                new UnicodeBlock("OLD_SOGDIAN", OLD_SOGDIAN_ID); /*[10F00]*/
+        /** @hide unsupported on Android*/
+        public static final UnicodeBlock SOGDIAN = new UnicodeBlock("SOGDIAN", SOGDIAN_ID); /*[10F30]*/
+
         /**
          */
         public static final UnicodeBlock INVALID_CODE
@@ -2637,6 +2695,11 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         /***/
         public static final int MALAYALAM_TTA = 99;
 
+        /** @hide unsupported on Android*/
+        public static final int HANIFI_ROHINGYA_KINNA_YA = 100;
+        /** @hide unsupported on Android*/
+        public static final int HANIFI_ROHINGYA_PA = 101;
+
         /**
          * One more than the highest normal JoiningGroup value.
          * The highest value is available via UCharacter.getIntPropertyMaxValue(UProperty.JoiningGroup).
@@ -2645,7 +2708,7 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
          * @hide unsupported on Android
          */
         @Deprecated
-        public static final int COUNT = 100;
+        public static final int COUNT = 102;
     }
 
     /**
@@ -2701,6 +2764,7 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         public static final int GLUE_AFTER_ZWJ = 16;  /*[GAZ]*/
         /***/
         public static final int ZWJ = 17;             /*[ZWJ]*/
+
         /**
          * One more than the highest normal GraphemeClusterBreak value.
          * The highest value is available via UCharacter.getIntPropertyMaxValue(UProperty.GRAPHEME_CLUSTER_BREAK).
@@ -2774,6 +2838,8 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         public static final int GLUE_AFTER_ZWJ = 20;   /*[GAZ]*/
         /***/
         public static final int ZWJ = 21;              /*[ZWJ]*/
+        /** @hide unsupported on Android*/
+        public static final int WSEGSPACE = 22;        /*[WSEGSPACE]*/
         /**
          * One more than the highest normal WordBreak value.
          * The highest value is available via UCharacter.getIntPropertyMaxValue(UProperty.WORD_BREAK).
@@ -2782,7 +2848,7 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
          * @hide unsupported on Android
          */
         @Deprecated
-        public static final int COUNT = 22;
+        public static final int COUNT = 23;
     }
 
     /**
@@ -4514,38 +4580,6 @@ public final class UCharacter implements ECharacterCategory, ECharacterDirection
         titleIter.setText(str);
         return CaseMapImpl.toTitle(getCaseLocale(locale), options, titleIter, str);
     }
-
-    /**
-     * Return a string with just the first word titlecased, for menus and UI, etc. This does not affect most of the string,
-     * and sometimes has no effect at all; the original string is returned whenever casing
-     * would not be appropriate for the first word (such as for CJK characters or initial numbers).
-     * Initial non-letters are skipped in order to find the character to change.
-     * Characters past the first affected are left untouched: see also TITLECASE_NO_LOWERCASE.
-     * <p>Examples:
-     * <table border='1'><tr><th>Source</th><th>Result</th><th>Locale</th></tr>
-     * <tr><td>anglo-American locale</td><td>Anglo-American locale</td></tr>
-     * <tr><td>“contact us”</td><td>“Contact us”</td></tr>
-     * <tr><td>49ers win!</td><td>49ers win!</td></tr>
-     * <tr><td>丰(abc)</td><td>丰(abc)</td></tr>
-     * <tr><td>«ijs»</td><td>«Ijs»</td></tr>
-     * <tr><td>«ijs»</td><td>«IJs»</td><td>nl-BE</td></tr>
-     * <tr><td>«ijs»</td><td>«İjs»</td><td>tr-DE</td></tr>
-     * </table>
-     * @param locale the locale for accessing exceptional behavior (eg for tr).
-     * @param str the source string to change
-     * @return the modified string, or the original if no modifications were necessary.
-     * @deprecated ICU internal only
-     * @hide original deprecated declaration
-     * @hide draft / provisional / internal are hidden on Android
-     */
-    @Deprecated
-    public static String toTitleFirst(ULocale locale, String str) {
-        // TODO: Remove this function. Inline it where it is called in CLDR.
-        return TO_TITLE_WHOLE_STRING_NO_LOWERCASE.apply(locale.toLocale(), null, str);
-    }
-
-    private static final android.icu.text.CaseMap.Title TO_TITLE_WHOLE_STRING_NO_LOWERCASE =
-            android.icu.text.CaseMap.toTitle().wholeString().noLowercase();
 
     /**
      * <strong>[icu]</strong> <p>Returns the titlecase version of the argument string.

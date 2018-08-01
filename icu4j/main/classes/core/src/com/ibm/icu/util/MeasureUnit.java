@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.ibm.icu.impl.CollectionSet;
 import com.ibm.icu.impl.ICUData;
 import com.ibm.icu.impl.ICUResourceBundle;
 import com.ibm.icu.impl.Pair;
@@ -149,8 +150,9 @@ public class MeasureUnit implements Serializable {
         Map<String, MeasureUnit> units = cache.get(type);
         // Train users not to modify returned set from the start giving us more
         // flexibility for implementation.
+        // Use CollectionSet instead of HashSet for better performance.
         return units == null ? Collections.<MeasureUnit>emptySet()
-                : Collections.unmodifiableSet(new HashSet<MeasureUnit>(units.values()));
+                : Collections.unmodifiableSet(new CollectionSet<MeasureUnit>(units.values()));
     }
 
     /**
@@ -171,7 +173,7 @@ public class MeasureUnit implements Serializable {
     }
 
     /**
-     * Create a MeasureUnit instance (creates a singleton instance).
+     * Creates a MeasureUnit instance (creates a singleton instance) or returns one from the cache.
      * <p>
      * Normally this method should not be used, since there will be no formatting data
      * available for it, and it may not be returned by getAvailable().
@@ -515,14 +517,6 @@ public class MeasureUnit implements Serializable {
      */
     public static final MeasureUnit MILE_PER_GALLON_IMPERIAL = MeasureUnit.internalGetInstance("consumption", "mile-per-gallon-imperial");
 
-    /*
-     * at-draft ICU 58, withdrawn
-     * public static final MeasureUnit EAST = MeasureUnit.internalGetInstance("coordinate", "east");
-     * public static final MeasureUnit NORTH = MeasureUnit.internalGetInstance("coordinate", "north");
-     * public static final MeasureUnit SOUTH = MeasureUnit.internalGetInstance("coordinate", "south");
-     * public static final MeasureUnit WEST = MeasureUnit.internalGetInstance("coordinate", "west");
-     */
-
     /**
      * Constant for unit of digital: bit
      * @stable ICU 54
@@ -843,8 +837,7 @@ public class MeasureUnit implements Serializable {
 
     /**
      * Constant for unit of length: point
-     * @draft ICU 59
-     * @provisional This API might change or be removed in a future release.
+     * @stable ICU 59
      */
     public static final MeasureUnit POINT = MeasureUnit.internalGetInstance("length", "point");
 

@@ -254,7 +254,7 @@ fa{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.37.5"}
+    Version{"2.1.41.97"}
     calendar{
         buddhist{
             eras{
@@ -373,7 +373,6 @@ fa{
                 }
             }
         }
-        default{"gregorian"}  // android-changed
         ethiopic{
             eras{
                 abbreviated{
@@ -2625,6 +2624,25 @@ fa{
             lenient{
                 "[\\--/]",
                 "[\\:∶]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "[\$﹩＄$]",
+                "[£₤]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‒⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }
