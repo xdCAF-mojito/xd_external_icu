@@ -192,11 +192,23 @@ package com.android.icu.charset {
 
 package com.android.icu.util {
 
+  public class CaseMapperNative {
+    method public static String toLowerCase(String, java.util.Locale);
+    method public static String toUpperCase(String, java.util.Locale);
+  }
+
   public class Icu4cMetadata {
     method public static String getCldrVersion();
     method public static String getIcuVersion();
     method public static String getTzdbVersion();
     method public static String getUnicodeVersion();
+  }
+
+  public final class LocaleNative {
+    method public static String getDisplayCountry(java.util.Locale, java.util.Locale);
+    method public static String getDisplayLanguage(java.util.Locale, java.util.Locale);
+    method public static String getDisplayScript(java.util.Locale, java.util.Locale);
+    method public static String getDisplayVariant(java.util.Locale, java.util.Locale);
   }
 
 }
