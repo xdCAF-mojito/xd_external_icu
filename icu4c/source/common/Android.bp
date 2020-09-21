@@ -46,8 +46,6 @@ cc_defaults {
 
     rtti: true,
 
-    required: ["icu-data_host_i18n_apex"],
-
     target: {
         android: {
             cflags: [
@@ -55,6 +53,9 @@ cc_defaults {
                 "-DPIC",
                 "-fPIC",
             ],
+        },
+        not_windows: {
+            required: ["icu-data_host_i18n_apex"],
         },
     },
 }
@@ -66,17 +67,14 @@ cc_library_headers {
     header_libs: ["icu4c_extra_headers"],
     export_header_lib_headers: ["icu4c_extra_headers"],
     export_include_dirs: ["."],
+    apex_available: [
+        "com.android.i18n",
+    ],
     target: {
         windows: {
             enabled: true,
         },
     },
-
-    apex_available: [
-        "//apex_available:platform",
-        "com.android.art.debug",
-        "com.android.art.release",
-    ],
 }
 
 //
@@ -91,6 +89,9 @@ cc_library {
     native_bridge_supported: true,
     unique_host_soname: true,
     defaults: ["libicuuc_defaults"],
+    apex_available: [
+        "com.android.i18n",
+    ],
     target: {
         android: {
             static: {
@@ -106,12 +107,13 @@ cc_library {
             // Windows requires importing data as a DLL when building with U_COMMON_IMPLEMENTATION
             shared_libs: ["libicuuc_stubdata"],
         },
+        windows_x86_64: {
+            dist: {
+                targets: ["layoutlib"],
+                dir: "layoutlib_native/windows",
+            },
+        },
     },
     header_libs: ["libicuuc_headers"],
     export_header_lib_headers: ["libicuuc_headers"],
-
-    apex_available: [
-        "com.android.art.debug",
-        "com.android.art.release",
-    ],
 }
