@@ -18,9 +18,8 @@ package com.android.i18n.timezone;
 import com.android.i18n.timezone.internal.BufferIterator;
 import com.android.i18n.timezone.internal.ByteBufferIterator;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectInputStream.GetField;
-import java.io.ObjectOutputStream;
+import java.io.ObjectOutputStream.PutField;
 import java.io.ObjectStreamField;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -100,28 +99,24 @@ public final class ZoneInfoData {
     /**
      * Implements {@link #getDSTSavings()}
      *
-     * <p>This should be final but is not because it may need to be fixed up by
-     * {@link #createFromSerializationFields(String, GetField)} to correct an inconsistency in
-     * the previous version of the code whereby this was set to a non-zero value even though DST was
-     * not actually used.
-     *
      * @see #mUseDst
      */
-    private int mDstSavings;
+    private final int mDstSavings;
 
     /**
      * The times (in seconds) at which the offsets changes for any reason, whether that is a change
      * in the offset from UTC or a change in the DST.
      *
      * <p>These times are pre-calculated externally from a set of rules (both historical and
-     * future) and stored in a file from which {@link ZoneInfoData#readTimeZone(String, BufferIterator,
-     * long)} reads the data. That is quite different to {@link java.util.SimpleTimeZone}, which has
-     * essentially human readable rules (e.g. DST starts at 01:00 on the first Sunday in March and
-     * ends at 01:00 on the last Sunday in October) that can be used to determine the DST transition
-     * times across a number of years
+     * future) and stored in a file from which {@link ZoneInfoData#readTimeZone(String,
+     * BufferIterator, long)} reads the data. That is quite different to
+     * {@link java.util.SimpleTimeZone}, which has essentially human readable rules (e.g. DST starts
+     * at 01:00 on the first Sunday in March and ends at 01:00 on the last Sunday in October) that
+     * can be used to determine the DST transition times across a number of years
      *
-     * <p>In terms of {@link ZoneInfoData tzfile} structure this array is of length {@code tzh_timecnt}
-     * and contains the times in seconds converted to long to make them safer to use.
+     * <p>In terms of {@link ZoneInfoData tzfile} structure this array is of length
+     * {@code tzh_timecnt} and contains the times in seconds converted to long to make them safer
+     * to use.
      *
      * <p>They are stored in order from earliest (lowest) time to latest (highest). A transition is
      * identified by its index within this array. A transition {@code T} is active at a specific
@@ -140,8 +135,8 @@ public final class ZoneInfoData {
      * index. The type is an index into the arrays {@link #mOffsets} and {@link #mIsDsts} that each
      * contain one part of the pair.
      *
-     * <p>In the {@link ZoneInfoData tzfile} structure the type array only contains unique instances of
-     * the {@code struct ttinfo} to save space and each type may be referenced by multiple
+     * <p>In the {@link ZoneInfoData tzfile} structure the type array only contains unique instances
+     * of the {@code struct ttinfo} to save space and each type may be referenced by multiple
      * transitions. However, the type pairs stored in this class are not guaranteed unique because
      * they do not include the {@code tt_abbrind}, which is the abbreviated identifier to use for
      * the time zone after the transition.
@@ -370,8 +365,8 @@ public final class ZoneInfoData {
         }
     }
 
-    private ZoneInfoData(String name, long[] transitions, byte[] types, int[] gmtOffsets, byte[] isDsts,
-            long currentTimeMillis) {
+    private ZoneInfoData(String name, long[] transitions, byte[] types, int[] gmtOffsets,
+            byte[] isDsts, long currentTimeMillis) {
         if (gmtOffsets.length == 0) {
             throw new IllegalArgumentException("ZoneInfo requires at least one offset "
                     + "to be provided for each timezone but could not find one for '" + name + "'");
@@ -424,7 +419,7 @@ public final class ZoneInfoData {
 
             // Is this zone observing DST currently or in the future?
             // We don't care if they've historically used it: most places have at least once.
-            // See http://code.google.com/p/android/issues/detail?id=877.
+            // See http://b/36905574.
             // This test means that for somewhere like Morocco, which tried DST in 2009 but has
             // no future plans (and thus no future schedule info) will report "true" from
             // useDaylightTime at the start of 2009 but "false" at the end. This seems appropriate.
@@ -485,8 +480,8 @@ public final class ZoneInfoData {
      * for backward app compatibility.
      */
     @libcore.api.IntraCoreApi
-    public static ZoneInfoData createFromSerializationFields(String id,
-            ObjectInputStream.GetField getField) throws IOException {
+    public static ZoneInfoData createFromSerializationFields(String id, GetField getField)
+            throws IOException {
         int rawOffset = getField.get("mRawOffset", 0);
         int earliestRawOffset = getField.get("mEarliestRawOffset", 0);
         boolean useDst = getField.get("mUseDst", false);
@@ -512,7 +507,7 @@ public final class ZoneInfoData {
      * Serialize {@link libcore.util.ZoneInfo} into backward app compatible form.
      */
     @libcore.api.IntraCoreApi
-    public void writeToSerializationFields(ObjectOutputStream.PutField putField) {
+    public void writeToSerializationFields(PutField putField) {
         putField.put("mRawOffset", mRawOffset);
         putField.put("mEarliestRawOffset", mEarliestRawOffset);
         putField.put("mUseDst", mUseDst);
@@ -695,6 +690,9 @@ public final class ZoneInfoData {
         return totalOffset;
     }
 
+    /**
+     * Returns the offset from UTC in milliseconds at the specified time {@when}.
+     */
     @libcore.api.IntraCoreApi
     public int getOffset(long when) {
         int offsetIndex = findOffsetIndexForTimeInMilliseconds(when);
@@ -707,6 +705,9 @@ public final class ZoneInfoData {
         return mRawOffset + mOffsets[offsetIndex] * 1000;
     }
 
+    /**
+     * Returns whether the given {@code time} is in daylight saving time in this time zone.
+     */
     @libcore.api.IntraCoreApi
     public boolean inDaylightTime(Date time) {
         long when = time.getTime();
@@ -721,21 +722,33 @@ public final class ZoneInfoData {
         return mIsDsts[offsetIndex] == 1;
     }
 
+    /**
+     * Returns the raw offset in milliseconds. The value is not affected by daylight saving.
+     */
     @libcore.api.IntraCoreApi
     public int getRawOffset() {
         return mRawOffset;
     }
 
+    /**
+     * Sets the raw offset.
+     */
     @libcore.api.IntraCoreApi
     public void setRawOffset(int off) {
         mRawOffset = off;
     }
 
+    /**
+     * Returns the offset of daylight saving in milliseconds.
+     */
     @libcore.api.IntraCoreApi
     public int getDSTSavings() {
         return mDstSavings;
     }
 
+    /**
+     * Returns {@code true} if this time zone still uses daylight saving time currently.
+     */
     @libcore.api.IntraCoreApi
     public boolean useDaylightTime() {
         return mUseDst;
@@ -745,6 +758,9 @@ public final class ZoneInfoData {
         return mEarliestRawOffset;
     }
 
+    /**
+     * Returns {@code true} if 2 time zones have the same time zone rule.
+     */
     @libcore.api.IntraCoreApi
     public boolean hasSameRules(ZoneInfoData other) {
         if (mUseDst != other.mUseDst) {
@@ -761,7 +777,8 @@ public final class ZoneInfoData {
                 && Arrays.equals(mTransitions, other.mTransitions);
     }
 
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean equals(Object obj) {
         if (!(obj instanceof ZoneInfoData)) {
             return false;
         }
@@ -783,6 +800,9 @@ public final class ZoneInfoData {
         return result;
     }
 
+    /**
+     * Returns a string containing the internal states for debug purpose.
+     */
     @Override
     public String toString() {
         return "[id=\"" + getID() + "\"" +
@@ -794,6 +814,9 @@ public final class ZoneInfoData {
             "]";
     }
 
+    /**
+     * Returns the time zone id.
+     */
     @libcore.api.CorePlatformApi
     @libcore.api.IntraCoreApi
     public String getID() {
