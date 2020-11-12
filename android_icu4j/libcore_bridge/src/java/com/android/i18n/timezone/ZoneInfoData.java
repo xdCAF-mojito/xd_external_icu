@@ -190,11 +190,15 @@ public final class ZoneInfoData {
      */
     @libcore.api.IntraCoreApi
     public ZoneInfoData(ZoneInfoData that) {
-        if (that == null) {
-            throw new NullPointerException("ZoneInfoData can't be null");
-        }
+        this(that, that.mRawOffset);
+    }
+
+    /**
+     * Copy constructor with a new raw offset.
+     */
+    private ZoneInfoData(ZoneInfoData that, int newRawOffset) {
+        mRawOffset = newRawOffset;
         mId = that.mId;
-        mRawOffset = that.mRawOffset;
         mDstSavings = that.mDstSavings;
         mEarliestRawOffset = that.mEarliestRawOffset;
         mUseDst = that.mUseDst;
@@ -202,7 +206,6 @@ public final class ZoneInfoData {
         mTypes = that.mTypes == null ? null : that.mTypes.clone();
         mOffsets = that.mOffsets == null ? null : that.mOffsets.clone();
         mIsDsts = that.mIsDsts == null ? null : that.mIsDsts.clone();
-
     }
 
     public static ZoneInfoData readTimeZone(String id, BufferIterator it, long currentTimeMillis)
@@ -692,6 +695,8 @@ public final class ZoneInfoData {
 
     /**
      * Returns the offset from UTC in milliseconds at the specified time {@when}.
+     *
+     * @param when the number of milliseconds since January 1, 1970, 00:00:00 GMT
      */
     @libcore.api.IntraCoreApi
     public int getOffset(long when) {
@@ -706,11 +711,12 @@ public final class ZoneInfoData {
     }
 
     /**
-     * Returns whether the given {@code time} is in daylight saving time in this time zone.
+     * Returns whether the given {@code when} is in daylight saving time in this time zone.
+     *
+     * @param when the number of milliseconds since January 1, 1970, 00:00:00 GMT
      */
     @libcore.api.IntraCoreApi
-    public boolean inDaylightTime(Date time) {
-        long when = time.getTime();
+    public boolean isInDaylightTime(long when) {
         int offsetIndex = findOffsetIndexForTimeInMilliseconds(when);
         if (offsetIndex == -1) {
             // Assume that all times before our first transition are non-daylight.
@@ -720,6 +726,14 @@ public final class ZoneInfoData {
             return false;
         }
         return mIsDsts[offsetIndex] == 1;
+    }
+
+    /**
+     * Returns whether the given {@code time} is in daylight saving time in this time zone.
+     */
+    @libcore.api.IntraCoreApi
+    public boolean inDaylightTime(Date time) {
+        return isInDaylightTime(time.getTime());
     }
 
     /**
@@ -821,6 +835,35 @@ public final class ZoneInfoData {
     @libcore.api.IntraCoreApi
     public String getID() {
         return mId;
+    }
+
+    /**
+     * Create a deep copy of this object.
+     */
+    @libcore.api.IntraCoreApi
+    public ZoneInfoData createCopy() {
+        return new ZoneInfoData(this);
+    }
+
+    /**
+     * Create a deep copy of this object with a new raw offset.
+     */
+    @libcore.api.IntraCoreApi
+    public ZoneInfoData createCopyWithRawOffset(int newRawOffset) {
+        return new ZoneInfoData(this, newRawOffset);
+    }
+
+    /**
+     * Returns the times (in seconds) at which the offsets changes for any reason, whether that is a
+     * change in the offset from UTC or a change in the DST.
+     *
+     * WARNING: This API is exposed only for app compat usage in {@link libcore.util.ZoneInfo}. The
+     * data is read-only. Do not write any data into the returned array, which is an internal
+     * data structure.
+     */
+    @libcore.api.IntraCoreApi
+    public long[] getTransitions() {
+        return mTransitions;
     }
 
     @libcore.api.IntraCoreApi
