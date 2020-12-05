@@ -23,10 +23,9 @@ import java.io.ObjectOutputStream.PutField;
 import java.io.ObjectStreamField;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Date;
 
 /**
- * Our concrete TimeZone implementation, backed by zoneinfo data.
+ * This class holds the data of a time zone backed by the tzfiles. An instance is immutable.
  *
  * <p>This reads time zone information from a binary file stored on the platform. The binary file
  * is essentially a single file containing compacted versions of all the tzfiles produced by the
@@ -72,7 +71,7 @@ public final class ZoneInfoData {
      * The (best guess) non-DST offset used "today". It is stored in milliseconds.
      * See also {@link #mOffsets} which holds values relative to this value, albeit in seconds.
      */
-    private int mRawOffset;
+    private final int mRawOffset;
 
     /**
      * The earliest non-DST offset for the zone. It is stored in milliseconds and is absolute, i.e.
@@ -188,8 +187,7 @@ public final class ZoneInfoData {
     /**
      * Copy constructor
      */
-    @libcore.api.IntraCoreApi
-    public ZoneInfoData(ZoneInfoData that) {
+    private ZoneInfoData(ZoneInfoData that) {
         this(that, that.mRawOffset);
     }
 
@@ -393,19 +391,20 @@ public final class ZoneInfoData {
             }
         }
 
+        final int rawOffsetInSeconds;
         // Use the latest non-daylight offset (if any) as the raw offset.
         if (mTransitions.length == 0) {
             // This case is no longer expected to occur in the data used on Android after changes
             // made in zic version 2014c. It is kept as a fallback.
             // If there are no transitions then use the first GMT offset.
-            mRawOffset = gmtOffsets[0];
+            rawOffsetInSeconds = gmtOffsets[0];
         } else {
             if (lastStdTransitionIndex == -1) {
                 throw new IllegalStateException( "ZoneInfo requires at least one non-DST "
                         + "transition to be provided for each timezone that has at least one "
                         + "transition but could not find one for '" + name + "'");
             }
-            mRawOffset = gmtOffsets[mTypes[lastStdTransitionIndex] & 0xff];
+            rawOffsetInSeconds = gmtOffsets[mTypes[lastStdTransitionIndex] & 0xff];
         }
 
         if (lastDstTransitionIndex != -1) {
@@ -464,17 +463,17 @@ public final class ZoneInfoData {
         }
 
         int earliestRawOffset = (firstStdTypeIndex != -1)
-                ? gmtOffsets[firstStdTypeIndex] : mRawOffset;
+                ? gmtOffsets[firstStdTypeIndex] : rawOffsetInSeconds;
 
         // Rather than keep offsets from UTC, we use offsets from local time, so the raw offset
-        // can be changed and automatically affect all the offsets.
+        // can be changed in the new instance and automatically affects all the offsets.
         mOffsets = gmtOffsets;
         for (int i = 0; i < mOffsets.length; i++) {
-            mOffsets[i] -= mRawOffset;
+            mOffsets[i] -= rawOffsetInSeconds;
         }
 
         // tzdata uses seconds, but Java uses milliseconds.
-        mRawOffset *= 1000;
+        mRawOffset = rawOffsetInSeconds * 1000;
         mEarliestRawOffset = earliestRawOffset * 1000;
     }
 
@@ -729,27 +728,11 @@ public final class ZoneInfoData {
     }
 
     /**
-     * Returns whether the given {@code time} is in daylight saving time in this time zone.
-     */
-    @libcore.api.IntraCoreApi
-    public boolean inDaylightTime(Date time) {
-        return isInDaylightTime(time.getTime());
-    }
-
-    /**
      * Returns the raw offset in milliseconds. The value is not affected by daylight saving.
      */
     @libcore.api.IntraCoreApi
     public int getRawOffset() {
         return mRawOffset;
-    }
-
-    /**
-     * Sets the raw offset.
-     */
-    @libcore.api.IntraCoreApi
-    public void setRawOffset(int off) {
-        mRawOffset = off;
     }
 
     /**
@@ -766,6 +749,68 @@ public final class ZoneInfoData {
     @libcore.api.IntraCoreApi
     public boolean useDaylightTime() {
         return mUseDst;
+    }
+
+    /**
+     * Returns the offset of daylight saving in milliseconds in the latest Daylight Savings Time
+     * after the time {@code when}. If no known DST occurs after {@code when}, it returns
+     * {@code null}.
+     *
+     * @param when the number of milliseconds since January 1, 1970, 00:00:00 GMT
+     */
+    @libcore.api.IntraCoreApi
+    public Integer getLatestDstSavings(long when) {
+        // Find the latest daylight and standard offsets (if any).
+        int lastStdTransitionIndex = -1;
+        int lastDstTransitionIndex = -1;
+        for (int i = mTransitions.length - 1;
+                (lastStdTransitionIndex == -1 || lastDstTransitionIndex == -1) && i >= 0; --i) {
+            int typeIndex = mTypes[i] & 0xff;
+            if (lastStdTransitionIndex == -1 && mIsDsts[typeIndex] == 0) {
+                lastStdTransitionIndex = i;
+            }
+            if (lastDstTransitionIndex == -1 && mIsDsts[typeIndex] != 0) {
+                lastDstTransitionIndex = i;
+            }
+        }
+
+        if (lastDstTransitionIndex != -1) {
+            // Check to see if the last DST transition is in the future or the past. If it is in
+            // the past then we treat it as if it doesn't exist, at least for the purposes of
+            // setting mDstSavings and mUseDst.
+            long lastDSTTransitionTime = mTransitions[lastDstTransitionIndex];
+
+            // Convert the current time in millis into seconds. Unlike other places that convert
+            // time in milliseconds into seconds in order to compare with transition time this
+            // rounds up rather than down. It does that because this is interested in what
+            // transitions apply in future
+            long currentUnixTimeSeconds = roundUpMillisToSeconds(when);
+
+            // Is this zone observing DST currently or in the future?
+            // We don't care if they've historically used it: most places have at least once.
+            // See http://b/36905574.
+            // This test means that for somewhere like Morocco, which tried DST in 2009 but has
+            // no future plans (and thus no future schedule info) will report "true" from
+            // useDaylightTime at the start of 2009 but "false" at the end. This seems appropriate.
+            if (lastDSTTransitionTime < currentUnixTimeSeconds) {
+                // The last DST transition is before now so treat it as if it doesn't exist.
+                lastDstTransitionIndex = -1;
+            }
+        }
+
+        final Integer dstSavings;
+        if (lastDstTransitionIndex == -1) {
+            // There were no DST transitions or at least no future DST transitions so DST is not
+            // used.
+            dstSavings = null;
+        } else {
+            // Use the latest transition's pair of offsets to compute the DST savings.
+            // This isn't generally useful, but it's exposed by TimeZone.getDSTSavings.
+            int lastGmtOffset = mOffsets[mTypes[lastStdTransitionIndex] & 0xff];
+            int lastDstOffset = mOffsets[mTypes[lastDstTransitionIndex] & 0xff];
+            dstSavings = (lastDstOffset - lastGmtOffset) * 1000;
+        }
+        return dstSavings;
     }
 
     int getEarliestRawOffset() {
@@ -866,11 +911,6 @@ public final class ZoneInfoData {
         return mTransitions;
     }
 
-    @libcore.api.IntraCoreApi
-    public long[] getTransitionsForAppCompat() {
-        return mTransitions;
-    }
-
     /**
      * IntraCoreApi made visible for testing in libcore
      */
@@ -880,5 +920,14 @@ public final class ZoneInfoData {
         ByteBufferIterator bufferIterator = new ByteBufferIterator(buf);
         return ZoneInfoData.readTimeZone(
             "TimeZone for '" + name + "'", bufferIterator, timeInMilli);
+    }
+
+    /**
+     * IntraCoreApi made visible for testing in libcore
+     */
+    @libcore.api.IntraCoreApi
+    public static ZoneInfoData createZoneInfo(String name, ByteBuffer buf) throws IOException {
+        // TODO: temp implementation to use current system time until libcore is updated
+        return createZoneInfo(name, System.currentTimeMillis(), buf);
     }
 }
