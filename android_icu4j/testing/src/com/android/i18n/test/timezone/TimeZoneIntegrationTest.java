@@ -24,6 +24,7 @@ import com.android.i18n.timezone.TzDataSetVersion;
 import com.android.i18n.timezone.ZoneInfoDb;
 import org.junit.Test;
 
+import android.icu.platform.AndroidDataFiles;
 import android.icu.text.TimeZoneNames;
 import android.icu.util.VersionInfo;
 import android.system.Os;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 
 /**
  * Tests that compare ICU and libcore time zone behavior and similar cross-cutting concerns.
@@ -201,7 +203,7 @@ public class TimeZoneIntegrationTest {
      * Asserts that the time zone format major / minor versions meets expectations.
      *
      * <p>If a set of time zone files is to be compatible with a device then the format of the files
-     * must meet the Android team's expectations. This is a sanity check to ensure that devices
+     * must meet the Android team's expectations. This is a confidence check to ensure that devices
      * running the test (e.g. under CTS) have not modified the TzDataSetVersion major / minor
      * versions for some reason: if they have it would render updated time zone files sent to the
      * device incompatible.
@@ -223,7 +225,7 @@ public class TimeZoneIntegrationTest {
      * <p>This uses the device's knowledge of the format version it expects and the
      * {@link TzDataSetVersion} files that accompany the known time zone data files.
      *
-     * <p>This is a sanity check to ensure that there's no way of installing incompatible data
+     * <p>This is a confidence check to ensure that there's no way of installing incompatible data
      * on a device. It assumes that {@link TzDataSetVersion} is updated as it should be when changes
      * are made that might affect time zone code / time zone data compatibility.
      */
@@ -272,7 +274,7 @@ public class TimeZoneIntegrationTest {
         String apexRootDir = TimeZoneDataFiles.getTimeZoneModuleFile("");
         List<String> dataModuleFiles =
                 createModuleTzFiles(TimeZoneDataFiles::getTimeZoneModuleTzFile);
-        String icuOverlayFile = TimeZoneDataFiles.getTimeZoneModuleIcuFile("icu_tzdata.dat");
+        String icuOverlayFile = AndroidDataFiles.getTimeZoneModuleIcuFile("icu_tzdata.dat");
         if (fileExists(apexRootDir)) {
             assertEquals("OK", tzModuleStatus);
             dataModuleFiles.forEach(TimeZoneIntegrationTest::assertFileExists);
@@ -284,7 +286,7 @@ public class TimeZoneIntegrationTest {
         }
 
         String icuDatFileName = "icudt" + VersionInfo.ICU_VERSION.getMajor() + "l.dat";
-        String i18nModuleIcuData = TimeZoneDataFiles.getI18nModuleIcuFile(icuDatFileName);
+        String i18nModuleIcuData = AndroidDataFiles.getI18nModuleIcuFile(icuDatFileName);
         assertFileExists(i18nModuleIcuData);
 
         // Devices currently have a subset of the time zone files in /system. These are going away
